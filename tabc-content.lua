@@ -493,70 +493,88 @@ local function fetchAndLoad()
     end)
 end
     
-    -- Button connections
-    refreshBtn.MouseButton1Click:Connect(function()
-        print("[BTN] Refresh clicked!")
-        Features.ITEM_CACHE = {}
-        Features.NEXT_API_CURSOR = nil
-        Features.CURRENT_PAGE_NUMBER = 1
-        fetchAndLoad()
-    end)
+    -- ═══════════════════════════════════════════════════════════
+--    🔥 CRITICAL FIX: Refresh Button Connection
+-- ═══════════════════════════════════════════════════════════
+-- Replace semua button connections (sekitar baris 478-530) dengan ini:
+
+-- Button connections
+refreshBtn.MouseButton1Click:Connect(function()
+    print("[BTN] Refresh clicked!")
     
-    sortBtn.MouseButton1Click:Connect(function()
-        local sortIndex = 1
-        for i, opt in ipairs(Features.SORT_OPTIONS) do
-            if opt == Features.CURRENT_SORT_OPTION then
-                sortIndex = i
-                break
-            end
-        end
-        
-        sortIndex = sortIndex % #Features.SORT_OPTIONS + 1
-        Features.CURRENT_SORT_OPTION = Features.SORT_OPTIONS[sortIndex]
-        sortBtn.Text = "📊 Sort: " .. Features.CURRENT_SORT_OPTION
-        
-        Features.ITEM_CACHE = {}
-        Features.NEXT_API_CURSOR = nil
-        Features.CURRENT_PAGE_NUMBER = 1
-        fetchAndLoad()
-    end)
-    
-    prevBtn.MouseButton1Click:Connect(function()
-        if Features.CURRENT_PAGE_NUMBER > 1 then
-            Features.CURRENT_PAGE_NUMBER = Features.CURRENT_PAGE_NUMBER - 1
-            loadEmotes()
-            scrollFrame.CanvasPosition = Vector2.new(0, 0)
-        end
-    end)
-    
-    nextBtn.MouseButton1Click:Connect(function()
-        local maxPage = math.ceil(#Features.ITEM_CACHE / Features.PAGE_SIZE)
-        if Features.CURRENT_PAGE_NUMBER < maxPage then
-            Features.CURRENT_PAGE_NUMBER = Features.CURRENT_PAGE_NUMBER + 1
-            loadEmotes()
-            scrollFrame.CanvasPosition = Vector2.new(0, 0)
-        elseif Features.NEXT_API_CURSOR then
-            Features.CURRENT_PAGE_NUMBER = Features.CURRENT_PAGE_NUMBER + 1
-            fetchAndLoad()
-        end
-    end)
-    
-    searchBox.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            Features.CURRENT_SEARCH_TEXT = searchBox.Text
-            Features.ITEM_CACHE = {}
-            Features.NEXT_API_CURSOR = nil
-            Features.CURRENT_PAGE_NUMBER = 1
-            fetchAndLoad()
-        end
-    end)
-    
-    -- Initial check
-    if #Features.ITEM_CACHE > 0 then
-        print("[INIT] Cache not empty, loading immediately...")
-        loadEmotes()
-        emptyLabel.Visible = false
+    -- ✅ FIXED: Clear cache contents, don't create new table
+    for i = #Features.ITEM_CACHE, 1, -1 do
+        Features.ITEM_CACHE[i] = nil
     end
+    
+    Features.NEXT_API_CURSOR = nil
+    Features.CURRENT_PAGE_NUMBER = 1
+    fetchAndLoad()
+end)
+
+sortBtn.MouseButton1Click:Connect(function()
+    local sortIndex = 1
+    for i, opt in ipairs(Features.SORT_OPTIONS) do
+        if opt == Features.CURRENT_SORT_OPTION then
+            sortIndex = i
+            break
+        end
+    end
+    
+    sortIndex = sortIndex % #Features.SORT_OPTIONS + 1
+    Features.CURRENT_SORT_OPTION = Features.SORT_OPTIONS[sortIndex]
+    sortBtn.Text = "📊 Sort: " .. Features.CURRENT_SORT_OPTION
+    
+    -- ✅ FIXED: Clear cache contents, don't create new table
+    for i = #Features.ITEM_CACHE, 1, -1 do
+        Features.ITEM_CACHE[i] = nil
+    end
+    
+    Features.NEXT_API_CURSOR = nil
+    Features.CURRENT_PAGE_NUMBER = 1
+    fetchAndLoad()
+end)
+
+prevBtn.MouseButton1Click:Connect(function()
+    if Features.CURRENT_PAGE_NUMBER > 1 then
+        Features.CURRENT_PAGE_NUMBER = Features.CURRENT_PAGE_NUMBER - 1
+        loadEmotes()
+        scrollFrame.CanvasPosition = Vector2.new(0, 0)
+    end
+end)
+
+nextBtn.MouseButton1Click:Connect(function()
+    local maxPage = math.ceil(#Features.ITEM_CACHE / Features.PAGE_SIZE)
+    if Features.CURRENT_PAGE_NUMBER < maxPage then
+        Features.CURRENT_PAGE_NUMBER = Features.CURRENT_PAGE_NUMBER + 1
+        loadEmotes()
+        scrollFrame.CanvasPosition = Vector2.new(0, 0)
+    elseif Features.NEXT_API_CURSOR then
+        Features.CURRENT_PAGE_NUMBER = Features.CURRENT_PAGE_NUMBER + 1
+        fetchAndLoad()
+    end
+end)
+
+searchBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        Features.CURRENT_SEARCH_TEXT = searchBox.Text
+        
+        -- ✅ FIXED: Clear cache contents, don't create new table
+        for i = #Features.ITEM_CACHE, 1, -1 do
+            Features.ITEM_CACHE[i] = nil
+        end
+        
+        Features.NEXT_API_CURSOR = nil
+        Features.CURRENT_PAGE_NUMBER = 1
+        fetchAndLoad()
+    end
+end)
+
+-- Initial check
+if #Features.ITEM_CACHE > 0 then
+    print("[INIT] Cache not empty, loading immediately...")
+    loadEmotes()
+    emptyLabel.Visible = false
 end
 
 -- ═══════════════════════════════════════════════════════════
